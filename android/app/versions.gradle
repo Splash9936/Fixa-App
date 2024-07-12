@@ -1,0 +1,34 @@
+project.ext.versions = new HashMap<String, Object>()
+
+project.ext.versions.apply = { variant ->
+    versions.applyVersionCode(variant)
+    versions.applyVersionName(variant)
+}
+
+// increments version code
+project.ext.versions.applyVersionCode = { variant ->
+    def buildType = variant.buildType.name
+    def versionCode = VERSION_CODE.toInteger()
+
+    //increment only for 'release' or 'beta' builds
+    if('release'.equals(buildType) || 'beta'.equals(buildType)) {
+        versionCode += 1
+        ant.propertyfile(file: "../gradle.properties") {
+            entry(key: "VERSION_CODE", value: versionCode)
+        }
+    }
+
+}
+
+// updates version name based on last git tag
+project.ext.versions.applyVersionName = { variant ->
+    def lastGitTag = 'git describe --abbrev=0 --tags'.execute().text.trim()
+
+    //update version name if we have a new tag
+    if (!VERSION_NAME.equals(lastGitTag)) {
+        ant.propertyfile(file: "../gradle.properties") {
+            entry(key: "VERSION_NAME", value: lastGitTag)
+        }
+    }
+    
+}
